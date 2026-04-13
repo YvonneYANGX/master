@@ -1,72 +1,56 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>送IAC一朵小红花 - 祝福提交</title>
-  <style>
-    body{font-family:Arial,sans-serif;background:#fdf6fb;padding:20px;max-width:600px;margin:0 auto}
-    .card{background:white;padding:30px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
-    h1{text-align:center;color:#be185d;margin-bottom:10px}
-    .subtitle{text-align:center;color:#6b7280;font-size:16px;margin-bottom:25px}
-    label{display:block;margin:15px 0 5px;font-weight:600}
-    input,textarea,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px}
-    button{width:100%;background:#f9a8d4;color:white;border:none;padding:12px;border-radius:8px;font-size:18px;font-weight:600;margin-top:20px;cursor:pointer}
-    button:hover{background:#f472b6}
-    .tip{text-align:center;color:#6b7280;margin-top:15px;font-size:14px}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>提交祝福</title>
 </head>
 <body>
-  <div class="card">
-    <h1>🌸 送IAC一朵小红花</h1>
-    <p class="subtitle">感谢你想感谢的人吧~感谢认可拿好礼</p>
-    <form id="submitForm">
-      <label>我的SESA号（仅数字）</label>
-      <input type="text" id="fromSesa" placeholder="请输入你的SESA数字编号" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-
-      <label>我的名字/昵称</label>
-      <input type="text" id="fromName" placeholder="请输入你的名字" required>
-
-      <label>感谢对象SESA号</label>
-      <input type="text" id="toSesa" placeholder="请输入对方SESA编号" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-
-      <label>感谢对象名字/昵称</label>
-      <input type="text" id="toName" placeholder="请输入对方名字" required>
-
-      <label>祝福类型</label>
-      <select id="type">
-        <option>工作感谢</option>
-        <option>加油鼓励</option>
-        <option>感恩祝福</option>
-      </select>
-
-      <label>祝福内容</label>
-      <textarea id="content" rows="4" placeholder="写下你的祝福/感谢吧～" required></textarea>
-      <button type="submit">提交祝福（待审核）</button>
-    </form>
-    <div class="tip">提交后需管理员审核，审核通过展示在祝福墙</div>
-  </div>
+    <h1>提交你的祝福</h1>
+    <div>
+        <input type="text" id="name" placeholder="请输入你的名字"><br><br>
+        <textarea id="content" rows="5" placeholder="请输入你的祝福"></textarea><br><br>
+        <button id="submit-btn">提交祝福</button>
+    </div>
 
 <script>
-const form = document.getElementById('submitForm');
-form.addEventListener('submit', e => {
-  e.preventDefault();
-  const item = {
-    id: Date.now(),
-    fromSesa: document.getElementById('fromSesa').value.trim(),
-    fromName: document.getElementById('fromName').value.trim(),
-    toSesa: document.getElementById('toSesa').value.trim(),
-    toName: document.getElementById('toName').value.trim(),
-    type: document.getElementById('type').value,
-    content: document.getElementById('content').value.trim(),
-    time: new Date().toLocaleString('zh-CN'),
-    likes: 0, comments: [], status: 'pending'
-  };
-  let list = JSON.parse(localStorage.getItem('blessings')) || [];
-  list.push(item);
-  localStorage.setItem('blessings', JSON.stringify(list));
-  alert('✅ 提交成功！等待审核');
-  form.reset();
+const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
+const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
+
+async function submitBlessing() {
+  const name = document.getElementById("name").value;
+  const content = document.getElementById("content").value;
+
+  if (!name || !content) {
+    alert("请填写姓名和祝福内容！");
+    return;
+  }
+
+  try {
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify({ name, content })
+    });
+
+    if (response.ok) {
+      alert("✅ 提交成功！");
+      document.getElementById("name").value = "";
+      document.getElementById("content").value = "";
+    } else {
+      alert("❌ 提交失败");
+    }
+  } catch (err) {
+    alert("❌ 网络错误");
+  }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("submit-btn").addEventListener("click", submitBlessing);
 });
 </script>
 </body>
