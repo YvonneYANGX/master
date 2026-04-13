@@ -1,47 +1,111 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>祝福墙</title>
-    <style>
-        .blessing-item { border: 1px solid #ccc; padding: 10px; margin: 10px; border-radius: 8px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>祝福墙管理后台</title>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <style>
+    body{font-family:Arial,sans-serif;background:#f3f4f6;padding:20px;max-width:1100px;margin:0 auto}
+    h1{text-align:center;color:#1f2937;margin-bottom:20px}
+    .export-btn{background:#16a34a;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:16px;margin-bottom:20px}
+    .section{margin-bottom:35px}
+    h2{font-size:18px;margin-bottom:12px}
+    .card{background:white;padding:18px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:12px}
+    .btn{border:none;padding:6px 12px;border-radius:4px;cursor:pointer;margin-right:8px;color:white}
+    .green{background:#10b981}
+    .red{background:#ef4444}
+    .blue{background:#3b82f6}
+    .yellow{color:#d97706}
+    .green-text{color:#059669}
+    .gray-text{color:#64748b}
+    .info{font-size:14px;color:#475569;margin:4px 0}
+  </style>
 </head>
 <body>
-    <h1>祝福墙</h1>
-    <div id="blessing-wall"></div>
+  <h1>🔐 祝福墙管理后台</h1>
+  <button class="export-btn" onclick="exportExcel()">📊 导出全部数据为Excel</button>
+
+  <div class="section">
+    <h2 class="yellow">⏳ 待审核祝福</h2>
+    <div id="pendingList"></div>
+  </div>
+  <div class="section">
+    <h2 class="green-text">✅ 已通过祝福</h2>
+    <div id="approvedList"></div>
+  </div>
+  <div class="section">
+    <h2 class="gray-text">🗑️ 已删除祝福（可恢复）</h2>
+    <div id="deletedList"></div>
+  </div>
 
 <script>
-const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
-const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
+// ========== 新增：URL参数解析 + 鉴权配置 ==========
+// 管理员密钥（可自行修改）
+const ADMIN_KEY = 'iac2024blessing'; 
+// 解析URL参数（key=管理员密钥、wallId=祝福墙实例ID）
+const urlParams = new URLSearchParams(window.location.search);
+const queryKey = urlParams.get('key');
+const wallId = urlParams.get('wallId') || 'default'; // 默认为default实例
+// localStorage键名（结合wallId实现多实例隔离）
+const STORAGE_KEY = `blessings_${wallId}`;
 
-async function loadBlessings() {
-  try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&order=created_at.desc`, {
-      headers: { "apikey": SUPABASE_KEY }
-    });
-    const messages = await response.json();
-    const container = document.getElementById("blessing-wall");
-    container.innerHTML = "";
-
-    messages.forEach(msg => {
-      const item = document.createElement("div");
-      item.className = "blessing-item";
-      item.innerHTML = `
-        <h3>${msg.name}</h3>
-        <p>${msg.content}</p>
-        <small>${new Date(msg.created_at).toLocaleString()}</small>
-      `;
-      container.appendChild(item);
-    });
-  } catch (err) {
-    console.error("加载失败", err);
-  }
+// 鉴权验证：key不正确则跳转到祝福墙
+if (queryKey !== ADMIN_KEY) {
+  alert('❌ 无管理员权限，即将跳转到祝福墙');
+  window.location.href = `wall.html?wallId=${wallId}`;
 }
 
-document.addEventListener("DOMContentLoaded", loadBlessings);
-setInterval(loadBlessings, 10000);
+// ========== 原有逻辑调整（替换localStorage键为STORAGE_KEY） ==========
+function renderAdmin(){
+  const list=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
+  const pending=list.filter(i=>i.status==='pending');
+  const approved=list.filter(i=>i.status==='approved');
+  const deleted=list.filter(i=>i.status==='deleted');
+
+  function makeHtml(arr){
+    return arr.map(i=>`
+      <div class="card">
+        <div class="info">${i.time} | ${i.type}</div>
+        <div class="info">提交人：SESA ${i.fromSesa} | ${i.fromName}</div>
+        <div class="info">被祝福人：SESA ${i.toSesa} | ${i.toName}</div>
+        <div class="my-2">${i.content}</div>
+        <div class="info">点赞：${i.likes} | 留言：${i.comments.length}</div>
+        ${i.status==='pending'?'<button class="btn green" onclick="approve('+i.id+')">通过</button>':''}
+        ${i.status!=='deleted'?'<button class="btn red" onclick="del('+i.id+')">删除</button>':''}
+        ${i.status==='deleted'?'<button class="btn blue" onclick="restore('+i.id+')">恢复</button>':''}
+      </div>
+    `).join('')||'<div class="card">暂无数据</div>';
+  }
+
+  document.getElementById('pendingList').innerHTML=makeHtml(pending);
+  document.getElementById('approvedList').innerHTML=makeHtml(approved);
+  document.getElementById('deletedList').innerHTML=makeHtml(deleted);
+}
+
+function approve(id){change(id,'approved')}
+function del(id){change(id,'deleted')}
+function restore(id){change(id,'pending')}
+function change(id,st){
+  let list=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
+  list=list.map(i=>i.id===id?{...i,status:st}:i);
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(list));
+  renderAdmin();
+}
+
+function exportExcel(){
+  const list=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
+  const data=[['提交SESA','提交人','被祝福SESA','被祝福人','类型','内容','时间','状态','点赞数']];
+  list.forEach(i=>{
+    data.push([i.fromSesa,i.fromName,i.toSesa,i.toName,i.type,i.content,i.time,i.status,i.likes])
+  });
+  const ws=XLSX.utils.aoa_to_sheet(data);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'祝福墙数据');
+  XLSX.writeFile(wb,`${wallId}_员工祝福墙统计数据.xlsx`);
+}
+
+window.onload=()=>{renderAdmin();setInterval(renderAdmin,3000)};
 </script>
 </body>
 </html>
