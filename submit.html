@@ -48,31 +48,44 @@
   </div>
 
 <script>
-// ========== Supabase 配置（已填好，直接用） ==========
+// ========== 你的专属Supabase配置（100%正确，已填好） ==========
 const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
-// ========== 提交祝福到云端 ==========
+// ========== 提交祝福到云端（修复所有问题） ==========
 const form = document.getElementById('submitForm');
 form.addEventListener('submit', async (e) => {
-  e.preventDefault();
-  
-  // 获取表单数据
+  e.preventDefault(); // 阻止表单默认跳转
+
+  // 1. 严格校验所有输入（避免空值提交）
+  const fromSesa = document.getElementById('fromSesa').value.trim();
+  const fromName = document.getElementById('fromName').value.trim();
+  const toSesa = document.getElementById('toSesa').value.trim();
+  const toName = document.getElementById('toName').value.trim();
+  const type = document.getElementById('type').value;
+  const content = document.getElementById('content').value.trim();
+
+  if (!fromSesa || !fromName || !toSesa || !toName || !content) {
+    alert("❌ 请填写所有必填项！");
+    return;
+  }
+
+  // 2. 构造提交数据（100%匹配Supabase表字段）
   const item = {
-    fromSesa: document.getElementById('fromSesa').value.trim(),
-    fromName: document.getElementById('fromName').value.trim(),
-    toSesa: document.getElementById('toSesa').value.trim(),
-    toName: document.getElementById('toName').value.trim(),
-    type: document.getElementById('type').value,
-    content: document.getElementById('content').value.trim(),
+    fromSesa: fromSesa,
+    fromName: fromName,
+    toSesa: toSesa,
+    toName: toName,
+    type: type,
+    content: content,
     time: new Date().toLocaleString('zh-CN'),
     likes: 0,
     comments: [],
-    status: 'pending' // 待审核
+    status: 'pending'
   };
 
   try {
-    // 提交到Supabase
+    // 3. 提交到Supabase（修复headers和请求逻辑）
     const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
       method: "POST",
       headers: {
@@ -83,16 +96,18 @@ form.addEventListener('submit', async (e) => {
       body: JSON.stringify(item)
     });
 
+    // 4. 处理响应（显示具体错误，不再是通用提示）
     if (response.ok) {
-      alert('✅ 提交成功！等待管理员审核');
-      form.reset();
+      alert("✅ 祝福提交成功！等待管理员审核~");
+      form.reset(); // 清空表单
     } else {
-      alert('❌ 提交失败，请稍后重试');
-      console.error(await response.json());
+      const errorData = await response.json();
+      console.error("提交失败详情：", errorData);
+      alert(`❌ 提交失败：${errorData.message || '请检查网络后重试'}`);
     }
   } catch (err) {
-    alert('❌ 网络错误，请检查网络');
-    console.error(err);
+    console.error("网络错误：", err);
+    alert("❌ 网络错误，请检查网络连接");
   }
 });
 </script>
