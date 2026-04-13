@@ -3,109 +3,268 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>祝福墙管理后台</title>
-  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <title>员工祝福墙 - IAC祝福认可墙</title>
   <style>
-    body{font-family:Arial,sans-serif;background:#f3f4f6;padding:20px;max-width:1100px;margin:0 auto}
-    h1{text-align:center;color:#1f2937;margin-bottom:20px}
-    .export-btn{background:#16a34a;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;font-size:16px;margin-bottom:20px}
-    .section{margin-bottom:35px}
-    h2{font-size:18px;margin-bottom:12px}
-    .card{background:white;padding:18px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,0.1);margin-bottom:12px}
-    .btn{border:none;padding:6px 12px;border-radius:4px;cursor:pointer;margin-right:8px;color:white}
-    .green{background:#10b981}
-    .red{background:#ef4444}
-    .blue{background:#3b82f6}
-    .yellow{color:#d97706}
-    .green-text{color:#059669}
-    .gray-text{color:#64748b}
-    .info{font-size:14px;color:#475569;margin:4px 0}
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #fdf6fb;
+      color: #4a3b4a;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      display: block;
+    }
+
+    /* ========== 上半区：漂浮祝福墙（春日多巴胺主题） ========== */
+    .float-section {
+      min-height: 70vh;
+      background: linear-gradient(135deg, #fff5fa 0%, #fef2f7 50%, #fce8f3 100%);
+      position: relative;
+      border-bottom: 2px solid #f8c8e0;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+
+    /* 左上角标题：IAC祝福认可墙 */
+    .float-section .wall-title {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #be185d;
+      z-index: 10;
+      text-shadow: 0 2px 4px rgba(248, 176, 217, 0.2);
+    }
+
+    /* 底部半透明大Thank You背景字 */
+    .float-section .thank-you-bg {
+      position: absolute;
+      bottom: 30px;
+      right: 40px;
+      font-size: 120px;
+      font-weight: bold;
+      color: #f472b6;
+      opacity: 0.12;
+      z-index: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .float-card {
+      position: absolute;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 20px 24px;
+      min-width: 260px;
+      max-width: 420px;
+      box-shadow: 0 8px 24px rgba(248, 176, 217, 0.25);
+      border: 1px solid #f9d9e9;
+      white-space: normal;
+      animation: floatHorizon linear infinite;
+      border-left: 6px solid;
+      will-change: transform;
+    }
+
+    /* 多巴胺浅色系边框（低饱和度，不花哨） */
+    .float-card.border-pink { border-left-color: #f9a8d4; }
+    .float-card.border-blue { border-left-color: #93c5fd; }
+    .float-card.border-green { border-left-color: #86efac; }
+    .float-card.border-yellow { border-left-color: #fde68a; }
+    .float-card.border-purple { border-left-color: #d8b4fe; }
+
+    @keyframes floatHorizon {
+      0% { transform: translateX(-130%); }
+      100% { transform: translateX(130vw); }
+    }
+
+    .float-card .type-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #fce7f3;
+      color: #be185d;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .float-card .to {
+      font-size: 20px;
+      font-weight: bold;
+      color: #831843;
+      margin-bottom: 12px;
+    }
+    .float-card .content {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #5e4a56;
+      margin-bottom: 14px;
+      min-height: 40px;
+      word-break: break-word;
+    }
+    .float-card .from {
+      text-align: right;
+      font-size: 15px;
+      color: #be185d;
+      font-weight: 500;
+    }
+    .float-card .time {
+      font-size: 12px;
+      color: #c982a9;
+      margin-top: 6px;
+    }
+
+    /* ========== 下半区：祝福汇总列表 ========== */
+    .list-section {
+      min-height: 30vh;
+      background: #fff;
+      padding: 24px 24px 40px;
+      overflow-y: visible;
+    }
+    .list-title {
+      font-size: 18px;
+      color: #be185d;
+      margin-bottom: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .list-title::before {
+      content: "📋";
+    }
+    .list-item {
+      padding: 12px 16px;
+      background: #fef5fa;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border-left: 3px solid #f9a8d4;
+    }
+    .list-item .top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #a0557a;
+      margin-bottom: 6px;
+    }
+    .list-item .content {
+      font-size: 15px;
+      color: #4a3b4a;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .list-item .name {
+      text-align: right;
+      font-size: 13px;
+      color: #be185d;
+      margin-top: 6px;
+    }
   </style>
 </head>
-<body>
-  <h1>🔐 祝福墙管理后台</h1>
-  <button class="export-btn" onclick="exportExcel()">📊 导出全部数据为Excel</button>
 
-  <div class="section">
-    <h2 class="yellow">⏳ 待审核祝福</h2>
-    <div id="pendingList"></div>
+<body>
+  <!-- 上半部分：漂浮祝福墙 -->
+  <div class="float-section" id="floatBox">
+    <div class="wall-title">IAC祝福认可墙</div>
+    <div class="thank-you-bg">Thank You</div>
   </div>
-  <div class="section">
-    <h2 class="green-text">✅ 已通过祝福</h2>
-    <div id="approvedList"></div>
-  </div>
-  <div class="section">
-    <h2 class="gray-text">🗑️ 已删除祝福（可恢复）</h2>
-    <div id="deletedList"></div>
+
+  <!-- 下半部分：祝福汇总列表（按时间排序） -->
+  <div class="list-section">
+    <div class="list-title">全部祝福</div>
+    <div id="listBox"></div>
   </div>
 
 <script>
-// ========== 新增：URL参数解析 + 鉴权配置 ==========
-// 管理员密钥（可自行修改）
-const ADMIN_KEY = 'iac2024blessing'; 
-// 解析URL参数（key=管理员密钥、wallId=祝福墙实例ID）
-const urlParams = new URLSearchParams(window.location.search);
-const queryKey = urlParams.get('key');
-const wallId = urlParams.get('wallId') || 'default'; // 默认为default实例
-// localStorage键名（结合wallId实现多实例隔离）
-const STORAGE_KEY = `blessings_${wallId}`;
+// ========== Supabase 配置（已填好，直接用） ==========
+const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
+const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
-// 鉴权验证：key不正确则跳转到祝福墙
-if (queryKey !== ADMIN_KEY) {
-  alert('❌ 无管理员权限，即将跳转到祝福墙');
-  window.location.href = `wall.html?wallId=${wallId}`;
+// ========== 工具函数 ==========
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
 }
 
-// ========== 原有逻辑调整（替换localStorage键为STORAGE_KEY） ==========
-function renderAdmin(){
-  const list=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
-  const pending=list.filter(i=>i.status==='pending');
-  const approved=list.filter(i=>i.status==='approved');
-  const deleted=list.filter(i=>i.status==='deleted');
+// 分轨道配置（防重叠）
+const trackConfigs = [
+  { top: '10%', minDur: 28, maxDur: 38, minDelay: -15, maxDelay: -5, zIndex: 5 },
+  { top: '28%', minDur: 22, maxDur: 32, minDelay: -18, maxDelay: -8, zIndex: 4 },
+  { top: '46%', minDur: 25, maxDur: 35, minDelay: -12, maxDelay: -2, zIndex: 3 },
+  { top: '64%', minDur: 20, maxDur: 30, minDelay: -20, maxDelay: -10, zIndex: 2 },
+  { top: '82%', minDur: 24, maxDur: 34, minDelay: -10, maxDelay: 0, zIndex: 1 },
+];
+const borderClasses = ['border-pink', 'border-blue', 'border-green', 'border-yellow', 'border-purple'];
 
-  function makeHtml(arr){
-    return arr.map(i=>`
-      <div class="card">
-        <div class="info">${i.time} | ${i.type}</div>
-        <div class="info">提交人：SESA ${i.fromSesa} | ${i.fromName}</div>
-        <div class="info">被祝福人：SESA ${i.toSesa} | ${i.toName}</div>
-        <div class="my-2">${i.content}</div>
-        <div class="info">点赞：${i.likes} | 留言：${i.comments.length}</div>
-        ${i.status==='pending'?'<button class="btn green" onclick="approve('+i.id+')">通过</button>':''}
-        ${i.status!=='deleted'?'<button class="btn red" onclick="del('+i.id+')">删除</button>':''}
-        ${i.status==='deleted'?'<button class="btn blue" onclick="restore('+i.id+')">恢复</button>':''}
+// ========== 从云端加载祝福 ==========
+async function loadBlessings() {
+  try {
+    // 读取Supabase数据，只加载已通过审核的
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&status=eq.approved&order=created_at.desc`, {
+      headers: { "apikey": SUPABASE_KEY }
+    });
+    const approved = await response.json();
+    console.log("加载到的已审核祝福：", approved);
+
+    // ========== 渲染漂浮祝福 ==========
+    const box = document.getElementById('floatBox');
+    const title = box.querySelector('.wall-title');
+    const thankYou = box.querySelector('.thank-you-bg');
+    box.innerHTML = '';
+    box.appendChild(title);
+    box.appendChild(thankYou);
+
+    const shuffle = [...approved].sort(() => Math.random() - 0.5);
+    shuffle.forEach((item, index) => {
+      const card = document.createElement('div');
+      const track = trackConfigs[index % trackConfigs.length];
+      const borderClass = borderClasses[Math.floor(Math.random() * borderClasses.length)];
+      const duration = rand(track.minDur, track.maxDur) + 's';
+      const delay = rand(track.minDelay, track.maxDelay) + 's';
+
+      card.className = `float-card ${borderClass}`;
+      card.style.top = track.top;
+      card.style.animationDuration = duration;
+      card.style.animationDelay = delay;
+      card.style.zIndex = track.zIndex;
+
+      card.innerHTML = `
+        <div class="type-tag">${item.type}</div>
+        <div class="to">致：${item.toName}</div>
+        <div class="content">${item.content}</div>
+        <div class="from">—— ${item.fromName}</div>
+        <div class="time">${item.time}</div>
+      `;
+      box.appendChild(card);
+    });
+
+    // ========== 渲染汇总列表 ==========
+    const listBox = document.getElementById('listBox');
+    listBox.innerHTML = approved.map(item => `
+      <div class="list-item">
+        <div class="top">
+          <span>${item.type}</span>
+          <span>${item.time}</span>
+        </div>
+        <div class="content">${item.content}</div>
+        <div class="name">来自：${item.fromName} → 致：${item.toName}</div>
       </div>
-    `).join('')||'<div class="card">暂无数据</div>';
+    `).join('') || '<div style="text-align:center;padding:20px;color:#c982a9">暂无祝福</div>';
+
+  } catch (err) {
+    console.error("加载祝福失败：", err);
   }
-
-  document.getElementById('pendingList').innerHTML=makeHtml(pending);
-  document.getElementById('approvedList').innerHTML=makeHtml(approved);
-  document.getElementById('deletedList').innerHTML=makeHtml(deleted);
 }
 
-function approve(id){change(id,'approved')}
-function del(id){change(id,'deleted')}
-function restore(id){change(id,'pending')}
-function change(id,st){
-  let list=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
-  list=list.map(i=>i.id===id?{...i,status:st}:i);
-  localStorage.setItem(STORAGE_KEY,JSON.stringify(list));
-  renderAdmin();
-}
-
-function exportExcel(){
-  const list=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];
-  const data=[['提交SESA','提交人','被祝福SESA','被祝福人','类型','内容','时间','状态','点赞数']];
-  list.forEach(i=>{
-    data.push([i.fromSesa,i.fromName,i.toSesa,i.toName,i.type,i.content,i.time,i.status,i.likes])
-  });
-  const ws=XLSX.utils.aoa_to_sheet(data);
-  const wb=XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb,ws,'祝福墙数据');
-  XLSX.writeFile(wb,`${wallId}_员工祝福墙统计数据.xlsx`);
-}
-
-window.onload=()=>{renderAdmin();setInterval(renderAdmin,3000)};
+// ========== 初始化 ==========
+window.onload = () => {
+  loadBlessings();
+  // 每7秒自动刷新，实时显示新祝福
+  setInterval(loadBlessings, 7000);
+};
 </script>
 </body>
 </html>
