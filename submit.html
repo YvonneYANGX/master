@@ -48,16 +48,17 @@
   </div>
 
 <script>
-// ========== 新增：URL参数解析（适配wallId） ==========
-const urlParams = new URLSearchParams(window.location.search);
-const wallId = urlParams.get('wallId') || 'default';
-const STORAGE_KEY = `blessings_${wallId}`; // 与admin/wall保持一致
+// ========== Supabase 配置（已填好，直接用） ==========
+const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
+const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
+// ========== 提交祝福到云端 ==========
 const form = document.getElementById('submitForm');
-form.addEventListener('submit', e => {
+form.addEventListener('submit', async (e) => {
   e.preventDefault();
+  
+  // 获取表单数据
   const item = {
-    id: Date.now(),
     fromSesa: document.getElementById('fromSesa').value.trim(),
     fromName: document.getElementById('fromName').value.trim(),
     toSesa: document.getElementById('toSesa').value.trim(),
@@ -65,13 +66,34 @@ form.addEventListener('submit', e => {
     type: document.getElementById('type').value,
     content: document.getElementById('content').value.trim(),
     time: new Date().toLocaleString('zh-CN'),
-    likes: 0, comments: [], status: 'pending'
+    likes: 0,
+    comments: [],
+    status: 'pending' // 待审核
   };
-  let list = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
-  list.push(item);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-  alert('✅ 提交成功！等待审核');
-  form.reset();
+
+  try {
+    // 提交到Supabase
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/messages`, {
+      method: "POST",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal"
+      },
+      body: JSON.stringify(item)
+    });
+
+    if (response.ok) {
+      alert('✅ 提交成功！等待管理员审核');
+      form.reset();
+    } else {
+      alert('❌ 提交失败，请稍后重试');
+      console.error(await response.json());
+    }
+  } catch (err) {
+    alert('❌ 网络错误，请检查网络');
+    console.error(err);
+  }
 });
 </script>
 </body>
