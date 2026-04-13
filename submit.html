@@ -13,6 +13,11 @@
     input,textarea,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px}
     button{width:100%;background:#f9a8d4;color:white;border:none;padding:12px;border-radius:8px;font-size:18px;font-weight:600;margin-top:20px;cursor:pointer}
     button:hover{background:#f472b6}
+    /* 按钮禁用样式 */
+    button:disabled {
+      background: #ccc !important;
+      cursor: not-allowed !important;
+    }
     .tip{text-align:center;color:#6b7280;margin-top:15px;font-size:14px}
   </style>
 </head>
@@ -42,22 +47,29 @@
 
       <label>祝福内容</label>
       <textarea id="content" rows="4" placeholder="写下你的祝福/感谢吧～" required></textarea>
-      <button type="submit">提交祝福（待审核）</button>
+      <button type="submit" id="submitBtn">提交祝福（待审核）</button>
     </form>
     <div class="tip">提交后需管理员审核，审核通过展示在祝福墙</div>
   </div>
 
 <script>
-// ========== 你的专属Supabase配置（100%正确，已填好） ==========
+// ========== 你的专属Supabase配置 ==========
 const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
-// ========== 提交祝福到云端（100%匹配表字段） ==========
+// 获取按钮元素
+const submitBtn = document.getElementById('submitBtn');
 const form = document.getElementById('submitForm');
+
+// ========== 防重复提交 + 提交逻辑 ==========
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // 严格校验所有输入
+  // 1. 禁用按钮，防止重复点击（核心！）
+  submitBtn.disabled = true;
+  submitBtn.innerText = "提交中...请勿重复点击";
+
+  // 校验输入
   const fromSesa = document.getElementById('fromSesa').value.trim();
   const fromName = document.getElementById('fromName').value.trim();
   const toSesa = document.getElementById('toSesa').value.trim();
@@ -67,10 +79,13 @@ form.addEventListener('submit', async (e) => {
 
   if (!fromSesa || !fromName || !toSesa || !toName || !content) {
     alert("❌ 请填写所有必填项！");
+    // 恢复按钮
+    submitBtn.disabled = false;
+    submitBtn.innerText = "提交祝福（待审核）";
     return;
   }
 
-  // 构造提交数据（100%匹配Supabase表字段，大小写完全一致）
+  // 构造数据
   const item = {
     fromSesa: fromSesa,
     fromName: fromName,
@@ -100,12 +115,17 @@ form.addEventListener('submit', async (e) => {
       form.reset();
     } else {
       const error = await response.json();
-      console.error("提交失败详情：", error);
       alert(`❌ 提交失败：${error.message || '请稍后重试'}`);
     }
   } catch (err) {
     console.error("网络错误：", err);
     alert("❌ 网络错误，请检查网络");
+  } finally {
+    // 2. 3秒后恢复按钮（冷却时间，防止连续提交）
+    setTimeout(() => {
+      submitBtn.disabled = false;
+      submitBtn.innerText = "提交祝福（待审核）";
+    }, 3000);
   }
 });
 </script>
