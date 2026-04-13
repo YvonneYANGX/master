@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>员工祝福墙 - IAC祝福认可墙</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Microsoft YaHei", Arial, sans-serif;
+      background: #fdf6fb;
+      color: #4a3b4a;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+      display: block;
+    }
+
+    /* ========== 上半区：漂浮祝福墙（春日多巴胺主题） ========== */
+    .float-section {
+      min-height: 70vh;
+      background: linear-gradient(135deg, #fff5fa 0%, #fef2f7 50%, #fce8f3 100%);
+      position: relative;
+      border-bottom: 2px solid #f8c8e0;
+      overflow-x: hidden;
+      overflow-y: visible;
+    }
+
+    /* 左上角标题：IAC祝福认可墙 */
+    .float-section .wall-title {
+      position: absolute;
+      top: 24px;
+      left: 24px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #be185d;
+      z-index: 10;
+      text-shadow: 0 2px 4px rgba(248, 176, 217, 0.2);
+    }
+
+    /* 底部半透明大Thank You背景字 */
+    .float-section .thank-you-bg {
+      position: absolute;
+      bottom: 30px;
+      right: 40px;
+      font-size: 120px;
+      font-weight: bold;
+      color: #f472b6;
+      opacity: 0.12;
+      z-index: 1;
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .float-card {
+      position: absolute;
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 20px 24px;
+      min-width: 260px;
+      max-width: 420px;
+      box-shadow: 0 8px 24px rgba(248, 176, 217, 0.25);
+      border: 1px solid #f9d9e9;
+      white-space: normal;
+      animation: floatHorizon linear infinite;
+      border-left: 6px solid;
+      will-change: transform;
+    }
+
+    /* 多巴胺浅色系边框（低饱和度，不花哨） */
+    .float-card.border-pink { border-left-color: #f9a8d4; }
+    .float-card.border-blue { border-left-color: #93c5fd; }
+    .float-card.border-green { border-left-color: #86efac; }
+    .float-card.border-yellow { border-left-color: #fde68a; }
+    .float-card.border-purple { border-left-color: #d8b4fe; }
+
+    @keyframes floatHorizon {
+      0% { transform: translateX(-130%); }
+      100% { transform: translateX(130vw); }
+    }
+
+    .float-card .type-tag {
+      display: inline-block;
+      padding: 4px 10px;
+      background: #fce7f3;
+      color: #be185d;
+      border-radius: 12px;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    .float-card .to {
+      font-size: 20px;
+      font-weight: bold;
+      color: #831843;
+      margin-bottom: 12px;
+    }
+    .float-card .content {
+      font-size: 16px;
+      line-height: 1.7;
+      color: #5e4a56;
+      margin-bottom: 14px;
+      min-height: 40px;
+      word-break: break-word;
+    }
+    .float-card .from {
+      text-align: right;
+      font-size: 15px;
+      color: #be185d;
+      font-weight: 500;
+    }
+    .float-card .time {
+      font-size: 12px;
+      color: #c982a9;
+      margin-top: 6px;
+    }
+
+    /* ========== 下半区：祝福汇总列表 ========== */
+    .list-section {
+      min-height: 30vh;
+      background: #fff;
+      padding: 24px 24px 40px;
+      overflow-y: visible;
+    }
+    .list-title {
+      font-size: 18px;
+      color: #be185d;
+      margin-bottom: 12px;
+      font-weight: bold;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .list-title::before {
+      content: "📋";
+    }
+    .list-item {
+      padding: 12px 16px;
+      background: #fef5fa;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border-left: 3px solid #f9a8d4;
+    }
+    .list-item .top {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #a0557a;
+      margin-bottom: 6px;
+    }
+    .list-item .content {
+      font-size: 15px;
+      color: #4a3b4a;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .list-item .name {
+      text-align: right;
+      font-size: 13px;
+      color: #be185d;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- 上半部分：漂浮祝福墙 -->
+  <div class="float-section" id="floatBox">
+    <div class="wall-title">IAC祝福认可墙</div>
+    <div class="thank-you-bg">Thank You</div>
+  </div>
+
+  <!-- 下半部分：祝福汇总列表（按时间排序） -->
+  <div class="list-section">
+    <div class="list-title">全部祝福</div>
+    <div id="listBox"></div>
+  </div>
+
+<script>
+// 随机数工具
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+// 核心优化：分轨道独立布局，彻底解决重叠
+const trackConfigs = [
+  { top: '10%', minDur: 28, maxDur: 38, minDelay: -15, maxDelay: -5, zIndex: 5 },
+  { top: '28%', minDur: 22, maxDur: 32, minDelay: -18, maxDelay: -8, zIndex: 4 },
+  { top: '46%', minDur: 25, maxDur: 35, minDelay: -12, maxDelay: -2, zIndex: 3 },
+  { top: '64%', minDur: 20, maxDur: 30, minDelay: -20, maxDelay: -10, zIndex: 2 },
+  { top: '82%', minDur: 24, maxDur: 34, minDelay: -10, maxDelay: 0, zIndex: 1 },
+];
+// 多巴胺边框类
+const borderClasses = ['border-pink', 'border-blue', 'border-green', 'border-yellow', 'border-purple'];
+
+// 渲染漂浮祝福（分轨道、随机颜色、100%防重叠）
+function renderFloat() {
+  const list = JSON.parse(localStorage.getItem('blessings')) || [];
+  const approved = list.filter(i => i.status === 'approved');
+  const box = document.getElementById('floatBox');
+  
+  // 保留标题和Thank You，避免被清空
+  const title = box.querySelector('.wall-title');
+  const thankYou = box.querySelector('.thank-you-bg');
+  box.innerHTML = '';
+  box.appendChild(title);
+  box.appendChild(thankYou);
+
+  // 乱序数组，实现随机滚动效果
+  const shuffle = [...approved].sort(() => Math.random() - 0.5);
+
+  shuffle.forEach((item, index) => {
+    const card = document.createElement('div');
+    // 1. 轮询分配轨道（避免随机拥挤，彻底防垂直重叠）
+    const track = trackConfigs[index % trackConfigs.length];
+    // 2. 随机分配多巴胺边框颜色
+    const borderClass = borderClasses[Math.floor(Math.random() * borderClasses.length)];
+    // 3. 按轨道配置生成专属速度/延迟，避免卡片追上
+    const duration = rand(track.minDur, track.maxDur) + 's';
+    const delay = rand(track.minDelay, track.maxDelay) + 's';
+
+    card.className = `float-card ${borderClass}`;
+    card.style.top = track.top;
+    card.style.animationDuration = duration;
+    card.style.animationDelay = delay;
+    card.style.zIndex = track.zIndex;
+
+    card.innerHTML = `
+      <div class="type-tag">${item.type}</div>
+      <div class="to">致：${item.toName}</div>
+      <div class="content">${item.content}</div>
+      <div class="from">—— ${item.fromName}</div>
+      <div class="time">${item.time}</div>
+    `;
+    box.appendChild(card);
+  });
+}
+
+// 渲染汇总列表（按发布时间排序）
+function renderList() {
+  const list = JSON.parse(localStorage.getItem('blessings')) || [];
+  const approved = list.filter(i => i.status === 'approved');
+  const box = document.getElementById('listBox');
+  
+  // 按时间最新在前排序
+  const sorted = [...approved].sort((a, b) => new Date(b.time) - new Date(a.time));
+
+  box.innerHTML = sorted.map(item => `
+    <div class="list-item">
+      <div class="top">
+        <span>${item.type}</span>
+        <span>${item.time}</span>
+      </div>
+      <div class="content">${item.content}</div>
+      <div class="name">来自：${item.fromName} → 致：${item.toName}</div>
+    </div>
+  `).join('') || '<div style="text-align:center;padding:20px;color:#c982a9">暂无祝福</div>';
+}
+
+// 初始化 + 定时刷新（7秒自动更新祝福）
+window.onload = () => {
+  renderFloat();
+  renderList();
+  setInterval(() => {
+    renderFloat();
+    renderList();
+  }, 7000);
+};
+</script>
+</body>
+</html>
