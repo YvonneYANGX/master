@@ -118,7 +118,7 @@
       margin-top: 6px;
     }
 
-    /* ========== 下半区：祝福汇总列表 ========== */
+    /* ========== 下半区：祝福汇总列表 + 点赞功能 ========== */
     .list-section {
       min-height: 30vh;
       background: #fff;
@@ -156,12 +156,41 @@
       color: #4a3b4a;
       line-height: 1.5;
       word-break: break-word;
+      margin-bottom: 8px;
     }
     .list-item .name {
       text-align: right;
       font-size: 13px;
       color: #be185d;
       margin-top: 6px;
+    }
+    /* 点赞按钮样式 */
+    .like-box {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .like-btn {
+      background: #f9a8d4;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 13px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .like-btn:disabled {
+      background: #ccc;
+      cursor: not-allowed;
+    }
+    .like-count {
+      font-size: 13px;
+      color: #be185d;
+      font-weight: 600;
     }
   </style>
 </head>
@@ -173,14 +202,14 @@
     <div class="thank-you-bg">Thank You</div>
   </div>
 
-  <!-- 下半部分：祝福汇总列表（按时间排序） -->
+  <!-- 下半部分：祝福汇总列表（带点赞功能） -->
   <div class="list-section">
-    <div class="list-title">全部祝福</div>
+    <div class="list-title">全部祝福（可点赞）</div>
     <div id="listBox"></div>
   </div>
 
 <script>
-// ========== Supabase 配置（已填好，直接用） ==========
+// ========== Supabase 配置 ==========
 const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
@@ -189,7 +218,7 @@ function rand(min, max) {
   return Math.random() * (max - min) + min;
 }
 
-// 分轨道配置（防重叠）
+// 分轨道配置
 const trackConfigs = [
   { top: '10%', minDur: 28, maxDur: 38, minDelay: -15, maxDelay: -5, zIndex: 5 },
   { top: '28%', minDur: 22, maxDur: 32, minDelay: -18, maxDelay: -8, zIndex: 4 },
@@ -199,17 +228,60 @@ const trackConfigs = [
 ];
 const borderClasses = ['border-pink', 'border-blue', 'border-green', 'border-yellow', 'border-purple'];
 
-// ========== 从云端加载祝福 ==========
+// ========== 点赞功能（防重复 + 云端同步） ==========
+async function likeMessage(id) {
+  const btn = document.getElementById(`like-btn-${id}`);
+  const countEl = document.getElementById(`like-count-${id}`);
+  
+  // 防重复点赞（本地记录）
+  const likedList = JSON.parse(localStorage.getItem('likedMessages') || '[]');
+  if (likedList.includes(id)) {
+    alert('✅ 你已经为这条祝福点过赞啦！');
+    return;
+  }
+
+  try {
+    // 1. 获取当前点赞数
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/messages?id=eq.${id}&select=likes`, {
+      headers: { "apikey": SUPABASE_KEY }
+    });
+    const data = await res.json();
+    const currentLikes = data[0].likes || 0;
+
+    // 2. 云端更新点赞数 +1
+    await fetch(`${SUPABASE_URL}/rest/v1/messages?id=eq.${id}`, {
+      method: "PATCH",
+      headers: {
+        "apikey": SUPABASE_KEY,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({ likes: currentLikes + 1 })
+    });
+
+    // 3. 前端实时更新
+    countEl.innerText = currentLikes + 1;
+    btn.disabled = true;
+    btn.innerText = "已点赞";
+
+    // 4. 记录已点赞，防止重复
+    likedList.push(id);
+    localStorage.setItem('likedMessages', JSON.stringify(likedList));
+    
+  } catch (err) {
+    alert("❌ 点赞失败，请稍后重试");
+    console.error(err);
+  }
+}
+
+// ========== 加载祝福 ==========
 async function loadBlessings() {
   try {
-    // 读取Supabase数据，只加载已通过审核的
     const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&status=eq.approved&order=created_at.desc`, {
       headers: { "apikey": SUPABASE_KEY }
     });
     const approved = await response.json();
-    console.log("加载到的已审核祝福：", approved);
 
-    // ========== 渲染漂浮祝福 ==========
+    // 渲染漂浮祝福
     const box = document.getElementById('floatBox');
     const title = box.querySelector('.wall-title');
     const thankYou = box.querySelector('.thank-you-bg');
@@ -241,8 +313,10 @@ async function loadBlessings() {
       box.appendChild(card);
     });
 
-    // ========== 渲染汇总列表 ==========
+    // 渲染列表 + 点赞按钮
     const listBox = document.getElementById('listBox');
+    const likedList = JSON.parse(localStorage.getItem('likedMessages') || '[]');
+    
     listBox.innerHTML = approved.map(item => `
       <div class="list-item">
         <div class="top">
@@ -251,6 +325,13 @@ async function loadBlessings() {
         </div>
         <div class="content">${item.content}</div>
         <div class="name">来自：${item.fromName} → 致：${item.toName}</div>
+        <!-- 点赞区域 -->
+        <div class="like-box">
+          <button class="like-btn" id="like-btn-${item.id}" ${likedList.includes(item.id) ? 'disabled' : ''} onclick="likeMessage(${item.id})">
+            ${likedList.includes(item.id) ? '已点赞' : '❤️ 点赞'}
+          </button>
+          <span class="like-count" id="like-count-${item.id}">${item.likes || 0}</span>
+        </div>
       </div>
     `).join('') || '<div style="text-align:center;padding:20px;color:#c982a9">暂无祝福</div>';
 
@@ -262,7 +343,6 @@ async function loadBlessings() {
 // ========== 初始化 ==========
 window.onload = () => {
   loadBlessings();
-  // 每7秒自动刷新，实时显示新祝福
   setInterval(loadBlessings, 7000);
 };
 </script>
