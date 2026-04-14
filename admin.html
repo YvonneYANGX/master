@@ -40,16 +40,15 @@
   </div>
 
 <script>
-// ========== Supabase 配置（已填好，直接用） ==========
+// ========== Supabase 配置 ==========
 const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
-// ========== 管理员鉴权（仅你可访问） ==========
+// ========== 管理员鉴权 ==========
 const ADMIN_KEY = 'iac2024blessing'; 
 const urlParams = new URLSearchParams(window.location.search);
 const queryKey = urlParams.get('key');
 
-// 无key则跳转到公开祝福墙
 if (queryKey !== ADMIN_KEY) {
   alert('❌ 无管理员权限，即将跳转到祝福墙');
   window.location.href = `https://yvonneyangx.github.io/master/wall.html`;
@@ -58,7 +57,6 @@ if (queryKey !== ADMIN_KEY) {
 // ========== 加载所有祝福 ==========
 async function renderAdmin() {
   try {
-    // 读取Supabase所有数据
     const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&order=created_at.desc`, {
       headers: { "apikey": SUPABASE_KEY }
     });
@@ -68,13 +66,12 @@ async function renderAdmin() {
     const approved = list.filter(i=>i.status==='approved');
     const deleted = list.filter(i=>i.status==='deleted');
 
-    // 渲染HTML
     function makeHtml(arr) {
       return arr.map(i=>`
         <div class="card">
           <div class="info">${i.time} | ${i.type}</div>
           <div class="info">提交人：SESA ${i.fromSesa} | ${i.fromName}</div>
-          <div class="info">被祝福人：SESA ${i.toSesa} | ${i.toName}</div>
+          <div class="info">被祝福人：${i.toName}（${i.toDept} 部门）</div>
           <div class="my-2">${i.content}</div>
           <div class="info">点赞：${i.likes} | 留言：${i.comments.length}</div>
           ${i.status==='pending'?'<button class="btn green" onclick="approve('+i.id+')">通过</button>':''}
@@ -109,7 +106,7 @@ async function changeStatus(id, status) {
       },
       body: JSON.stringify({ status: status })
     });
-    renderAdmin(); // 刷新列表
+    renderAdmin();
   } catch (err) {
     alert("操作失败");
     console.error(err);
@@ -124,14 +121,14 @@ async function exportExcel() {
     });
     const list = await response.json();
 
-    const data=[['提交SESA','提交人','被祝福SESA','被祝福人','类型','内容','时间','状态','点赞数']];
+    const data=[['提交SESA','提交人','被祝福人','被祝福人部门','超能力类型','感谢内容','时间','状态','点赞数']];
     list.forEach(i=>{
-      data.push([i.fromSesa,i.fromName,i.toSesa,i.toName,i.type,i.content,i.time,i.status,i.likes])
+      data.push([i.fromSesa,i.fromName,i.toName,i.toDept,i.type,i.content,i.time,i.status,i.likes])
     });
     const ws=XLSX.utils.aoa_to_sheet(data);
     const wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'祝福墙数据');
-    XLSX.writeFile(wb,`IAC员工祝福墙统计数据_${new Date().toLocaleDateString()}.xlsx`);
+    XLSX.writeFile(wb,`IAC超能力文化周祝福数据_${new Date().toLocaleDateString()}.xlsx`);
   } catch (err) {
     alert("导出失败");
     console.error(err);
@@ -141,7 +138,7 @@ async function exportExcel() {
 // ========== 初始化 ==========
 window.onload = () => {
   renderAdmin();
-  setInterval(renderAdmin, 3000); // 3秒自动刷新
+  setInterval(renderAdmin, 3000);
 };
 </script>
 </body>
