@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>送IAC一朵小红花 - 祝福提交</title>
+  <title>IAC“超”能力文化周 - 提交认可</title>
   <style>
     body{font-family:Arial,sans-serif;background:#fdf6fb;padding:20px;max-width:600px;margin:0 auto}
     .card{background:white;padding:30px;border-radius:12px;box-shadow:0 4px 6px rgba(0,0,0,0.1)}
@@ -23,8 +23,8 @@
 </head>
 <body>
   <div class="card">
-    <h1>🌸 送IAC一朵小红花</h1>
-    <p class="subtitle">感谢你想感谢的人吧~感谢认可拿好礼</p>
+    <h1>IAC“超”能力文化周</h1>
+    <p class="subtitle">写下你与TA的“超”能力故事吧，写认可故事拿好礼</p>
     <form id="submitForm">
       <label>我的SESA号（仅数字）</label>
       <input type="text" id="fromSesa" placeholder="请输入你的SESA数字编号" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
@@ -32,22 +32,22 @@
       <label>我的名字/昵称</label>
       <input type="text" id="fromName" placeholder="请输入你的名字" required>
 
-      <label>感谢对象SESA号</label>
-      <input type="text" id="toSesa" placeholder="请输入对方SESA编号" required oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-
-      <label>感谢对象名字/昵称</label>
+      <label>感谢对象名字</label>
       <input type="text" id="toName" placeholder="请输入对方名字" required>
 
-      <label>祝福类型</label>
-      <select id="type">
-        <option>工作感谢</option>
-        <option>加油鼓励</option>
-        <option>感恩祝福</option>
+      <label>感谢对象部门</label>
+      <input type="text" id="toDept" placeholder="请输入对方所在部门" required>
+
+      <label>感谢TA的“超”能力</label>
+      <select id="type" required>
+        <option>决策力</option>
+        <option>执行力</option>
+        <option>创新力</option>
       </select>
 
-      <label>祝福内容</label>
-      <textarea id="content" rows="4" placeholder="写下你的祝福/感谢吧～" required></textarea>
-      <button type="submit" id="submitBtn">提交祝福（待审核）</button>
+      <label>感谢内容</label>
+      <textarea id="content" rows="4" placeholder="写下你的感谢与认可故事～" required></textarea>
+      <button type="submit" id="submitBtn">提交认可（待审核）</button>
     </form>
     <div class="tip">提交后需管理员审核，审核通过展示在祝福墙</div>
   </div>
@@ -65,32 +65,32 @@ const form = document.getElementById('submitForm');
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // 1. 禁用按钮，防止重复点击（核心！）
+  // 1. 禁用按钮，防止重复点击
   submitBtn.disabled = true;
   submitBtn.innerText = "提交中...请勿重复点击";
 
   // 校验输入
   const fromSesa = document.getElementById('fromSesa').value.trim();
   const fromName = document.getElementById('fromName').value.trim();
-  const toSesa = document.getElementById('toSesa').value.trim();
   const toName = document.getElementById('toName').value.trim();
+  const toDept = document.getElementById('toDept').value.trim();
   const type = document.getElementById('type').value;
   const content = document.getElementById('content').value.trim();
 
-  if (!fromSesa || !fromName || !toSesa || !toName || !content) {
+  if (!fromSesa || !fromName || !toName || !toDept || !content) {
     alert("❌ 请填写所有必填项！");
     // 恢复按钮
     submitBtn.disabled = false;
-    submitBtn.innerText = "提交祝福（待审核）";
+    submitBtn.innerText = "提交认可（待审核）";
     return;
   }
 
-  // 构造数据
+  // 构造提交数据
   const item = {
     fromSesa: fromSesa,
     fromName: fromName,
-    toSesa: toSesa,
     toName: toName,
+    toDept: toDept,
     type: type,
     content: content,
     time: new Date().toLocaleString('zh-CN'),
@@ -121,10 +121,10 @@ form.addEventListener('submit', async (e) => {
     console.error("网络错误：", err);
     alert("❌ 网络错误，请检查网络");
   } finally {
-    // 2. 3秒后恢复按钮（冷却时间，防止连续提交）
+    // 3秒后恢复按钮
     setTimeout(() => {
       submitBtn.disabled = false;
-      submitBtn.innerText = "提交祝福（待审核）";
+      submitBtn.innerText = "提交认可（待审核）";
     }, 3000);
   }
 });
