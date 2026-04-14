@@ -40,11 +40,10 @@
   </div>
 
 <script>
-// ========== Supabase 配置 ==========
 const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
-// ========== 管理员鉴权 ==========
+// 管理员鉴权
 const ADMIN_KEY = 'iac2024blessing'; 
 const urlParams = new URLSearchParams(window.location.search);
 const queryKey = urlParams.get('key');
@@ -54,7 +53,7 @@ if (queryKey !== ADMIN_KEY) {
   window.location.href = `https://yvonneyangx.github.io/master/wall.html`;
 }
 
-// ========== 加载所有祝福 ==========
+// 加载所有祝福
 async function renderAdmin() {
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&order=created_at.desc`, {
@@ -90,7 +89,7 @@ async function renderAdmin() {
   }
 }
 
-// ========== 状态操作 ==========
+// 状态操作
 async function approve(id) { await changeStatus(id, 'approved'); }
 async function del(id) { await changeStatus(id, 'deleted'); }
 async function restore(id) { await changeStatus(id, 'pending'); }
@@ -113,7 +112,7 @@ async function changeStatus(id, status) {
   }
 }
 
-// ========== 导出Excel ==========
+// 导出Excel
 async function exportExcel() {
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*`, {
@@ -135,7 +134,6 @@ async function exportExcel() {
   }
 }
 
-// ========== 初始化 ==========
 window.onload = () => {
   renderAdmin();
   setInterval(renderAdmin, 3000);
