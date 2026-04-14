@@ -13,7 +13,6 @@
     input,textarea,select{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:16px}
     button{width:100%;background:#f9a8d4;color:white;border:none;padding:12px;border-radius:8px;font-size:18px;font-weight:600;margin-top:20px;cursor:pointer}
     button:hover{background:#f472b6}
-    /* 按钮禁用样式 */
     button:disabled {
       background: #ccc !important;
       cursor: not-allowed !important;
@@ -57,19 +56,17 @@
 const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
-// 获取按钮元素
 const submitBtn = document.getElementById('submitBtn');
 const form = document.getElementById('submitForm');
 
-// ========== 防重复提交 + 提交逻辑 ==========
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
 
-  // 1. 禁用按钮，防止重复点击
+  // 禁用按钮防重复
   submitBtn.disabled = true;
-  submitBtn.innerText = "提交中...请勿重复点击";
+  submitBtn.innerText = "提交中...";
 
-  // 校验输入
+  // 获取表单值
   const fromSesa = document.getElementById('fromSesa').value.trim();
   const fromName = document.getElementById('fromName').value.trim();
   const toName = document.getElementById('toName').value.trim();
@@ -79,13 +76,12 @@ form.addEventListener('submit', async (e) => {
 
   if (!fromSesa || !fromName || !toName || !toDept || !content) {
     alert("❌ 请填写所有必填项！");
-    // 恢复按钮
     submitBtn.disabled = false;
     submitBtn.innerText = "提交认可（待审核）";
     return;
   }
 
-  // 构造提交数据
+  // 构造JSON（字段和表完全一致）
   const item = {
     fromSesa: fromSesa,
     fromName: fromName,
@@ -115,13 +111,13 @@ form.addEventListener('submit', async (e) => {
       form.reset();
     } else {
       const error = await response.json();
-      alert(`❌ 提交失败：${error.message || '请稍后重试'}`);
+      alert(`❌ 提交失败：${error.message}`);
     }
   } catch (err) {
-    console.error("网络错误：", err);
     alert("❌ 网络错误，请检查网络");
+    console.error(err);
   } finally {
-    // 3秒后恢复按钮
+    // 恢复按钮
     setTimeout(() => {
       submitBtn.disabled = false;
       submitBtn.innerText = "提交认可（待审核）";
