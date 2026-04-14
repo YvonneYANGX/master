@@ -20,7 +20,7 @@
       display: block;
     }
 
-    /* ========== 上半区：漂浮祝福墙 ========== */
+    /* 上半区：漂浮祝福墙 */
     .float-section {
       min-height: 70vh;
       background: linear-gradient(135deg, #fff5fa 0%, #fef2f7 50%, #fce8f3 100%);
@@ -29,7 +29,6 @@
       overflow-x: hidden;
       overflow-y: visible;
     }
-
     .float-section .wall-title {
       position: absolute;
       top: 24px;
@@ -40,7 +39,6 @@
       z-index: 10;
       text-shadow: 0 2px 4px rgba(248, 176, 217, 0.2);
     }
-
     .float-section .thank-you-bg {
       position: absolute;
       bottom: 30px;
@@ -53,7 +51,6 @@
       pointer-events: none;
       user-select: none;
     }
-
     .float-card {
       position: absolute;
       background: #ffffff;
@@ -68,18 +65,15 @@
       border-left: 6px solid;
       will-change: transform;
     }
-
     .float-card.border-pink { border-left-color: #f9a8d4; }
     .float-card.border-blue { border-left-color: #93c5fd; }
     .float-card.border-green { border-left-color: #86efac; }
     .float-card.border-yellow { border-left-color: #fde68a; }
     .float-card.border-purple { border-left-color: #d8b4fe; }
-
     @keyframes floatHorizon {
       0% { transform: translateX(-130%); }
       100% { transform: translateX(130vw); }
     }
-
     .float-card .type-tag {
       display: inline-block;
       padding: 4px 10px;
@@ -120,7 +114,7 @@
       margin-top: 6px;
     }
 
-    /* ========== 下半区：祝福汇总列表 + 点赞 + 部门 ========== */
+    /* 下半区：祝福列表+点赞+部门 */
     .list-section {
       min-height: 30vh;
       background: #fff;
@@ -171,7 +165,7 @@
       color: #be185d;
       margin-top: 6px;
     }
-    /* 点赞按钮样式 */
+    /* 点赞样式 */
     .like-box {
       display: flex;
       align-items: center;
@@ -201,26 +195,21 @@
     }
   </style>
 </head>
-
 <body>
-  <!-- 上半部分：漂浮祝福墙 -->
   <div class="float-section" id="floatBox">
     <div class="wall-title">IAC“超”能力文化周</div>
     <div class="thank-you-bg">Thank You</div>
   </div>
 
-  <!-- 下半部分：祝福汇总列表（带点赞+部门） -->
   <div class="list-section">
     <div class="list-title">全部祝福（可点赞）</div>
     <div id="listBox"></div>
   </div>
 
 <script>
-// ========== Supabase 配置 ==========
 const SUPABASE_URL = "https://ylhaxhmkpdgdrudcsloy.supabase.co";
 const SUPABASE_KEY = "sb_publishable_lrnh9o-hCrik-z6yLb1Rig_SmD53BIA";
 
-// ========== 工具函数 ==========
 function rand(min, max) {
   return Math.random() * (max - min) + min;
 }
@@ -234,7 +223,7 @@ const trackConfigs = [
 ];
 const borderClasses = ['border-pink', 'border-blue', 'border-green', 'border-yellow', 'border-purple'];
 
-// ========== 点赞功能 ==========
+// 点赞功能
 async function likeMessage(id) {
   const btn = document.getElementById(`like-btn-${id}`);
   const countEl = document.getElementById(`like-count-${id}`);
@@ -274,7 +263,7 @@ async function likeMessage(id) {
   }
 }
 
-// ========== 加载祝福 ==========
+// 加载祝福
 async function loadBlessings() {
   try {
     const response = await fetch(`${SUPABASE_URL}/rest/v1/messages?select=*&status=eq.approved&order=created_at.desc`, {
@@ -315,7 +304,7 @@ async function loadBlessings() {
       box.appendChild(card);
     });
 
-    // 渲染列表 + 点赞 + 部门
+    // 渲染列表+点赞+部门
     const listBox = document.getElementById('listBox');
     const likedList = JSON.parse(localStorage.getItem('likedMessages') || '[]');
     
@@ -342,7 +331,6 @@ async function loadBlessings() {
   }
 }
 
-// ========== 初始化 ==========
 window.onload = () => {
   loadBlessings();
   setInterval(loadBlessings, 7000);
